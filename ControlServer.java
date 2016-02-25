@@ -59,7 +59,7 @@ class PoleServer_handler implements Runnable {
         clientSocket = socket;
         
         try {
-			Scanner config = new Scanner(new File(""));
+			Scanner config = new Scanner(new File("config.txt"));
 			kp = config.nextDouble();
 			ki = config.nextDouble();
 			kd = config.nextDouble();
