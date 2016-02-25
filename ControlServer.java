@@ -9,6 +9,7 @@ public class ControlServer {
 
     private static ServerSocket serverSocket;
     private static final int port = 25533;
+    
 
     /**
      * Main method that creates new socket and PoleServer instance and runs it.
@@ -43,19 +44,52 @@ class PoleServer_handler implements Runnable {
     String message = "abc";
     static Socket clientSocket;
     Thread t;
+    private PIDController controller;
+    private final double K_P, K_I, K_D, SET_POINT;
+    PrintWriter log;
+    File outputFile;
 
     /**
      * Class Constructor
      */
     public PoleServer_handler(Socket socket) {
+    	double kp = 0, ki = 0, kd = 0;
+    	SET_POINT = 0;
         t = new Thread(this);
         clientSocket = socket;
+        
+        try {
+			Scanner config = new Scanner(new File(""));
+			kp = config.nextDouble();
+			ki = config.nextDouble();
+			kd = config.nextDouble();
+			System.out.println();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        K_P = kp;
+        K_I = ki;
+        K_D = kd;
+        
+        String fileName = UUID.randomUUID() + ".txt";
+        outputFile = new File(fileName);
+        try {
+			log = new PrintWriter(outputFile);
+	        System.out.println("Created file called " + fileName);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        controller = new PIDController(K_P, K_I, K_D, SET_POINT);
 
         try {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(clientSocket.getInputStream());
-        } catch (IOException ioe) {
+        } catch (Exception ioe) {
             ioe.printStackTrace();
         }
         t.start();
@@ -155,62 +189,10 @@ class PoleServer_handler implements Runnable {
     // independently. The interface needs to be changed if the control of one
     // pendulum needs sensing data from other pendulums.
     double calculate_action(double angle, double angleDot, double angleDDot, double pos, double posDot, double posDDot) {
-      double action = 0;
-      //Switch these everytime we switch the other ones
-      double cartMass = 1.;
-      double poleMass = 0.1;
-      double poleLength = 1.;
-
-       // if (angle > 0 && angleDiff < 0) {
-       // if (angle > 0) {
-       //     if (angle > 65 * 0.01745) {
-       //         action = 10;
-       //     } else if (angle > 60 * 0.01745) {
-       //         action = 8;
-       //     } else if (angle > 50 * 0.01745) {
-       //         action = 7.5;
-       //     } else if (angle > 30 * 0.01745) {
-       //         action = 4;
-       //     } else if (angle > 20 * 0.01745) {
-       //         action = 2;
-       //     } else if (angle > 10 * 0.01745) {
-       //         action = 0.5;
-       //     } else if(angle >5*0.01745){
-       //         action = 0.2;
-       //     } else if(angle >2*0.01745){
-       //         action = 0.1;
-       //     } else {
-       //         action = 0;
-       //     }
-       // } else if (angle < 0) {
-       //     if (angle < -65 * 0.01745) {
-       //         action = -10;
-       //     } else if (angle < -60 * 0.01745) {
-       //         action = -8;
-       //     } else if (angle < -50 * 0.01745) {
-       //         action = -7.5;
-       //     } else if (angle < -30 * 0.01745) {
-       //         action = -4;
-       //     } else if (angle < -20 * 0.01745) {
-       //         action = -2;
-       //     } else if (angle < -10 * 0.01745) {
-       //         action = -0.5;
-       //     } else if(angle <-5*0.01745){
-       //         action = -0.2;
-       //     } else if(angle <-2*0.01745){
-       //         action = -0.1;
-       //     } else {
-       //         action = 0;
-       //     }
-       // } else {
-       //     action = 0.;
-       // }
-      action = (0.01)*((cartMass + poleMass)*posDDot + .00005 * posDot + (poleMass*poleLength*angleDDot*Math.cos(angle)))
-      - (0.01*(poleMass*poleLength*(angleDDot*angleDDot*Math.sin(angle))));
-      action *= -1;
-      System.out.println(action);
-      return action;
-   }
+    	double action = controller.output(-angle, 0.01);
+    	log.println(action);
+        return action;
+    }
 
     /**
      * This method sends the Double message on the object output stream.
