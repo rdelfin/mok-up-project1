@@ -20,12 +20,14 @@ public class PIDController {
     }
     
     public double output(double input, double time) {
-
         err = setpoint - input;
+    	System.out.println("ERROR: " + err);
         intErr += err*time;
         double control = Kp*err + Ki*intErr + Kd*(err - prevErr) / time;
 		prevErr = err;
         return control;
     }
+    
+    public double getSetpoint() { return setpoint; }
 
 }

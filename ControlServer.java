@@ -44,8 +44,7 @@ class PoleServer_handler implements Runnable {
     String message = "abc";
     static Socket clientSocket;
     Thread t;
-    private PIDController controller;
-    private final double K_P, K_I, K_D, SET_POINT;
+    private PIDController angleController, posController;
     PrintWriter angleLog, positionLog;
     File angleFile, positionFile;
 
@@ -53,25 +52,24 @@ class PoleServer_handler implements Runnable {
      * Class Constructor
      */
     public PoleServer_handler(Socket socket) {
-    	double kp = 0, ki = 0, kd = 0;
-    	SET_POINT = 0;
+    	double kpTheta = 0, kiTheta = 0, kdTheta = 0, spTheta = 0;
+    	double kpPos = 0, kiPos = 0, kdPos = 0, spPos = 0;
         t = new Thread(this);
         clientSocket = socket;
         
         try {
 			Scanner config = new Scanner(new File("config.txt"));
-			kp = config.nextDouble();
-			ki = config.nextDouble();
-			kd = config.nextDouble();
+			kpTheta = config.nextDouble();
+			kiTheta = config.nextDouble();
+			kdTheta = config.nextDouble();
+			kpPos = config.nextDouble();
+			kiPos = config.nextDouble();
+			kdPos = config.nextDouble();
 			System.out.println();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        
-        K_P = kp;
-        K_I = ki;
-        K_D = kd;
         
 	String filePrefix = UUID.randomUUID().toString();
         angleFile = new File(filePrefix + "-angle.txt");
@@ -83,7 +81,8 @@ class PoleServer_handler implements Runnable {
 			e.printStackTrace();
 		}
         
-        controller = new PIDController(K_P, K_I, K_D, SET_POINT);
+        angleController = new PIDController(kpTheta, kiTheta, kdTheta, spTheta);
+        posController = new PIDController(kpPos, kiPos, kdPos, spPos);
 
         try {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -189,10 +188,21 @@ class PoleServer_handler implements Runnable {
     // independently. The interface needs to be changed if the control of one
     // pendulum needs sensing data from other pendulums.
     double calculate_action(double angle, double angleDot, double angleDDot, double pos, double posDot, double posDDot) {
-		double action = controller.output(angle, 0.01);
-		System.out.println("Writting angle: " + angle + " and position " + pos);
-		angleLog.println(angle);
-		positionLog.println(pos);
+		double action;
+		
+		// When the pendulum is pointing in the direction of the target position, use both controllers
+		//if(Math.signum(pos - posController.getSetpoint()) == -Math.signum(angle) && Math.abs(angle) > 0.001) {
+			//action = angleDot;
+			action = angleController.output(angle, 0.01) + 
+						posController.output(pos, 0.01);
+			System.out.println("CONTROL BOTH");
+		//}
+		// Otherwise, use angle controller only
+		//else {
+		//	action = angleController.output(angle, 0.01);
+		//	System.out.println("CONTROL ONE");
+		
+		System.out.println("-------");
 		angleLog.flush();
 		positionLog.flush();
 		return action;
