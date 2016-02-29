@@ -182,20 +182,20 @@ class PoleServer_handler implements Runnable {
         }
 
     }
-
+    
     // Calculate the actions to be applied to the inverted pendulum from the
     // sensing data.
     // TODO: Current implementation assumes that each pole is controlled
     // independently. The interface needs to be changed if the control of one
     // pendulum needs sensing data from other pendulums.
     double calculate_action(double angle, double angleDot, double angleDDot, double pos, double posDot, double posDDot) {
-    	double action = controller.output(-angle, 0.01);
-	System.out.println("Writting angle: " + angle + " and position " + pos);
-    	angleLog.println(angle);
-	positionLog.println(pos);
-	angleLog.flush();
-	positionLog.flush();
-        return action;
+		double action = controller.output(angle, 0.01);
+		System.out.println("Writting angle: " + angle + " and position " + pos);
+		angleLog.println(angle);
+		positionLog.println(pos);
+		angleLog.flush();
+		positionLog.flush();
+		return action;
     }
 
     /**

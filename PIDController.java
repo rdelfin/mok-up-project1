@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class PIDController {
-    private double Kp, Ti, Td;
+    private double Kp, Ki, Kd;
     private double err, prevErr, intErr;
     private double setpoint;
     
@@ -9,10 +9,10 @@ public class PIDController {
         
     }
     
-    public PIDController(double Kp, double Ti, double Td, double setpoint) {
+    public PIDController(double Kp, double Ki, double Kd, double setpoint) {
         this.Kp = Kp;
-        this.Ti = Ti;
-        this.Td = Td;
+        this.Ki = Ki;
+        this.Kd = Kd;
         this.setpoint = setpoint;
         err = 0;
         intErr = 0;
@@ -23,14 +23,9 @@ public class PIDController {
 
         err = setpoint - input;
         intErr += err*time;
-
-	double intTerm;
-	if(Ti == 0.0)
-		intTerm = 0;
-	else
-		intTerm = 1.0/Ti;
-
-        return Kp * (err + intTerm*intErr + Td*(err - prevErr) / time);
+        double control = Kp*err + Ki*intErr + Kd*(err - prevErr) / time;
+		prevErr = err;
+        return control;
     }
 
 }
