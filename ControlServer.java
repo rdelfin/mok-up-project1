@@ -46,8 +46,8 @@ class PoleServer_handler implements Runnable {
     Thread t;
     private PIDController controller;
     private final double K_P, K_I, K_D, SET_POINT;
-    PrintWriter log;
-    File outputFile;
+    PrintWriter angleLog, positionLog;
+    File angleFile, positionFile;
 
     /**
      * Class Constructor
@@ -73,13 +73,13 @@ class PoleServer_handler implements Runnable {
         K_I = ki;
         K_D = kd;
         
-        String fileName = UUID.randomUUID() + ".txt";
-        outputFile = new File(fileName);
+	String filePrefix = UUID.randomUUID().toString();
+        angleFile = new File(filePrefix + "-angle.txt");
+	positionFile = new File(filePrefix + "-position.txt");
         try {
-			log = new PrintWriter(outputFile);
-	        System.out.println("Created file called " + fileName);
+			angleLog = new PrintWriter(angleFile);
+			positionLog = new PrintWriter(positionFile);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
@@ -190,7 +190,11 @@ class PoleServer_handler implements Runnable {
     // pendulum needs sensing data from other pendulums.
     double calculate_action(double angle, double angleDot, double angleDDot, double pos, double posDot, double posDDot) {
     	double action = controller.output(-angle, 0.01);
-    	log.println(action);
+	System.out.println("Writting angle: " + angle + " and position " + pos);
+    	angleLog.println(angle);
+	positionLog.println(pos);
+	angleLog.flush();
+	positionLog.flush();
         return action;
     }
 

@@ -24,7 +24,13 @@ public class PIDController {
         err = setpoint - input;
         intErr += err*time;
 
-        return Kp * (err + (1.0/Ti)*intErr + Td*(err - prevErr) / time);
+	double intTerm;
+	if(Ti == 0.0)
+		intTerm = 0;
+	else
+		intTerm = 1.0/Ti;
+
+        return Kp * (err + intTerm*intErr + Td*(err - prevErr) / time);
     }
 
 }
