@@ -35,18 +35,16 @@ class Sensor implements Runnable {
         while (true) {
             // Sensor will get four data from each pendulum
             // {angle, angleDot, pos, posDot}
-            double sensorData[] = new double[6 * physics.NUM_POLES];
+            double sensorData[] = new double[4 * physics.NUM_POLES];
             Pendulum[] pendulums = physics.get_pendulums();
 
             for (int i = 0; i < pendulums.length; i++) {
                    synchronized(pendulums[i]) {
-                   double angle, angleDot, angleDDot, pos, posDot, posDDot;
+                   double angle, angleDot, pos, posDot;
                    angle = pendulums[i].get_angle();
                    angleDot = pendulums[i].get_angleDot();
-                   angleDDot = pendulums[i].get_angleDDot();
                    pos = pendulums[i].get_pos();
                    posDot = pendulums[i].get_posDot();
-                   posDDot = pendulums[i].get_posDDot();
 
                    if (triggerType == TriggerType.EVENT_TRIGGER) {
                      // Do not send if it is in event triggered mode and the angle is small
@@ -59,12 +57,10 @@ class Sensor implements Runnable {
                        continue;
                      }
                    }
-                   sensorData[i*6+0] = angle;
-                   sensorData[i*6+1] = angleDot;
-                   sensorData[i*6+2] = angleDDot;
-                   sensorData[i*6+3] = pos;
-                   sensorData[i*6+4] = posDot;
-                   sensorData[i*6+5] = posDDot;
+                   sensorData[i*4+0] = angle;
+                   sensorData[i*4+1] = angleDot;
+                   sensorData[i*4+2] = pos;
+                   sensorData[i*4+3] = posDot;
                 }
             }
 

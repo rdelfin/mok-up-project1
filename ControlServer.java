@@ -9,6 +9,7 @@ public class ControlServer {
 
     private static ServerSocket serverSocket;
     private static final int port = 25533;
+    private static boolean first = true;
 
     /**
      * Main method that creates new socket and PoleServer instance and runs it.
@@ -44,6 +45,8 @@ class PoleServer_handler implements Runnable {
     static Socket clientSocket;
     Thread t;
 
+    boolean first = false;
+
     /**
      * Class Constructor
      */
@@ -60,7 +63,7 @@ class PoleServer_handler implements Runnable {
         }
         t.start();
     }
-    double angle, angleDot, angleDDot, pos, posDot, posDDot,  action = 0, i = 0;
+    double angle, angleDot, pos, posDot,  action = 0, i = 0;
 
     /**
      * This method receives the pole positions and calculates the updated value
@@ -87,7 +90,7 @@ class PoleServer_handler implements Runnable {
                 }
                 
                 double[] data= (double[])(obj);
-                assert(data.length == NUM_POLES * 6);
+                assert(data.length == NUM_POLES * 4);
                 double[] actions = new double[NUM_POLES];
  
                 // Get sensor data of each pole and calculate the action to be
@@ -97,16 +100,14 @@ class PoleServer_handler implements Runnable {
                 // the control of one pendulum needs sensing data from other
                 // pendulums.
                 for (int i = 0; i < NUM_POLES; i++) {
-                  angle = data[i*6+0];
-                  angleDot = data[i*6+1];
-                  angleDDot = data[i*6+2];
-                  pos = data[i*6+3];
-                  posDot = data[i*6+4];
-                  posDDot = data[i*6+5];
+                  angle = data[i*4+0];
+                  angleDot = data[i*4+1];
+                  pos = data[i*4+2];
+                  posDot = data[i*4+3];
                   
                   System.out.println("server < pole["+i+"]: "+angle+"  "
-                      +angleDot+"   "+angleDDot+"   "+pos+"  "+posDot+ "  "+posDDot);
-                  actions[i] = calculate_action(angle, angleDot, angleDDot, pos, posDot, posDDot);
+                      +angleDot+"   "+pos+"  "+posDot);
+                  actions[i] = calculate_action(angle, angleDot, pos, posDot);
                 }
 
                 sendMessage_doubleArray(actions);
@@ -154,63 +155,70 @@ class PoleServer_handler implements Runnable {
     // TODO: Current implementation assumes that each pole is controlled
     // independently. The interface needs to be changed if the control of one
     // pendulum needs sensing data from other pendulums.
-    double calculate_action(double angle, double angleDot, double angleDDot, double pos, double posDot, double posDDot) {
+    double calculate_action(double angle, double angleDot, double pos, double posDot) {
       double action = 0;
-      //Switch these everytime we switch the other ones
-      double cartMass = 1.;
-      double poleMass = 0.1;
-      double poleLength = 1.;
 
-       // if (angle > 0 && angleDiff < 0) {
-       // if (angle > 0) {
-       //     if (angle > 65 * 0.01745) {
-       //         action = 10;
-       //     } else if (angle > 60 * 0.01745) {
-       //         action = 8;
-       //     } else if (angle > 50 * 0.01745) {
-       //         action = 7.5;
-       //     } else if (angle > 30 * 0.01745) {
-       //         action = 4;
-       //     } else if (angle > 20 * 0.01745) {
-       //         action = 2;
-       //     } else if (angle > 10 * 0.01745) {
-       //         action = 0.5;
-       //     } else if(angle >5*0.01745){
-       //         action = 0.2;
-       //     } else if(angle >2*0.01745){
-       //         action = 0.1;
-       //     } else {
-       //         action = 0;
-       //     }
-       // } else if (angle < 0) {
-       //     if (angle < -65 * 0.01745) {
-       //         action = -10;
-       //     } else if (angle < -60 * 0.01745) {
-       //         action = -8;
-       //     } else if (angle < -50 * 0.01745) {
-       //         action = -7.5;
-       //     } else if (angle < -30 * 0.01745) {
-       //         action = -4;
-       //     } else if (angle < -20 * 0.01745) {
-       //         action = -2;
-       //     } else if (angle < -10 * 0.01745) {
-       //         action = -0.5;
-       //     } else if(angle <-5*0.01745){
-       //         action = -0.2;
-       //     } else if(angle <-2*0.01745){
-       //         action = -0.1;
-       //     } else {
-       //         action = 0;
-       //     }
-       // } else {
-       //     action = 0.;
-       // }
-      action = (0.01)*((cartMass + poleMass)*posDDot + .00005 * posDot + (poleMass*poleLength*angleDDot*Math.cos(angle)))
-      - (0.01*(poleMass*poleLength*(angleDDot*angleDDot*Math.sin(angle))));
-      action *= -1;
-      System.out.println(action);
-      return action;
-   }
+      double targetPos = -2;
+      int outOfRange = 0;
+      double dist = targetPos - pos;
+
+      if (Math.abs(dist) >= 0.04){
+        if(Math.signum(angle) == Math.signum(dist) && Math.abs(angle) > 0.01) {
+          return angleDot*4.5;
+        } else {
+          return angle*5;
+        }
+      }
+      
+
+      return 1.1*angle + angleDot*0.1;
+
+
+   //    double epsilon = 0.1;
+
+   //    if (Math.abs(angle) < epsilon){
+   //      double dist = targetPos - pos;
+   //      if (Math.abs(dist) >= 0.04){
+   //        if (dist > 0){
+   //          return -2;
+   //        }
+   //        return 2;
+   //      }
+   //      return 0;
+   //    }
+
+    //   if (first){
+    //     first = false;
+    //     if (dist > 0){
+    //       return 1;
+    //     } else{
+    //       return -1;
+    //     }
+
+    //   }
+    //   if (Math.abs(dist) >= 0.04){
+
+    //   }
+
+    //   if (angle > 0){
+    //     //Angle greater than 0 and increasing
+    //     if (angleDot > 0){
+    //       return angle*10 + angleDot;
+    //     }
+    //     else{
+    //       return angle*10;// 
+    //     }
+    //   }
+    //   else{
+    //     //angle less than 0 and decreasing
+    //     if (angleDot < 0){
+    //       return angle*10 + angleDot;
+    //     }
+    //     else{
+    //       return angle*10;
+    //     }
+    //   }
+       }
 
     /**
      * This method sends the Double message on the object output stream.
