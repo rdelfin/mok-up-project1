@@ -35,7 +35,7 @@ public class ControlServer {
  */
 class PoleServer_handler implements Runnable {
     // Set the number of poles
-    private static final int NUM_POLES = 1;
+    private static final int NUM_POLES = 2;
 
     static ServerSocket providerSocket;
     Socket connection = null;
@@ -43,6 +43,7 @@ class PoleServer_handler implements Runnable {
     ObjectInputStream in;
     String message = "abc";
     static Socket clientSocket;
+    double posx;
     Thread t;
 
     boolean first = false;
@@ -107,7 +108,7 @@ class PoleServer_handler implements Runnable {
                   
                   System.out.println("server < pole["+i+"]: "+angle+"  "
                       +angleDot+"   "+pos+"  "+posDot);
-                  actions[i] = calculate_action(angle, angleDot, pos, posDot);
+                  actions[i] = calculate_action(angle, angleDot, pos, posDot, i);
                 }
 
                 sendMessage_doubleArray(actions);
@@ -155,12 +156,13 @@ class PoleServer_handler implements Runnable {
     // TODO: Current implementation assumes that each pole is controlled
     // independently. The interface needs to be changed if the control of one
     // pendulum needs sensing data from other pendulums.
-    double calculate_action(double angle, double angleDot, double pos, double posDot) {
+    double calculate_action(double angle, double angleDot, double pos, double posDot, int index) {
       double action = 0;
 
-      double targetPos = -2;
+      double targetPos = -1 + index * 2;
       int outOfRange = 0;
       double dist = targetPos - pos;
+      System.out.println("TARGET: " + targetPos);
 
       if (Math.abs(dist) >= 0.04){
         if(Math.signum(angle) == Math.signum(dist) && Math.abs(angle) > 0.01) {
@@ -171,7 +173,7 @@ class PoleServer_handler implements Runnable {
       }
       
 
-      return 1.1*angle + angleDot*0.1;
+      return 1.5*angle + angleDot*0.1;
 
 
    //    double epsilon = 0.1;
