@@ -194,6 +194,8 @@ class PoleServer_handler implements Runnable {
 		// When the pendulum is pointing in the direction of the target position, use both controllers
 		//if(Math.signum(pos - posController.getSetpoint()) == -Math.signum(angle) && Math.abs(angle) > 0.001) {
 			//action = angleDot;
+            angle += .1*angleDot;
+            pos += .1*posDot;
 			action = angleController.output(angle, 0.01) + 
 						posController.output(pos, 0.01);
 			System.out.println("CONTROL BOTH");
