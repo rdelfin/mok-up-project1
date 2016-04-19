@@ -1,11 +1,1 @@
-/Actuator.class
-/Client.class
-/ControlServer.class
-/PIDController.class
-/Pendulum.class
-/Physics.class
-/PoleServer_handler.class
-/PoleState.class
-/Sensor.class
-/TriggerType.class
-/UpdatingUIThread.class
+*.class

@@ -59,12 +59,16 @@ class Sensor implements Runnable {
                        continue;
                      }
                    }
-                   sensorData[i*6+0] = angle;
-                   sensorData[i*6+1] = angleDot;
-                   sensorData[i*6+2] = angleDDot;
-                   sensorData[i*6+3] = pos;
-                   sensorData[i*6+4] = posDot;
-                   sensorData[i*6+5] = posDDot;
+
+                   double timeMills = (double)System.currentTimeMillis() / 1000;
+		   
+                   sensorData[i*7+0] = angle;
+                   sensorData[i*7+1] = angleDot;
+                   sensorData[i*7+2] = angleDDot;
+                   sensorData[i*7+3] = pos;
+                   sensorData[i*7+4] = posDot;
+                   sensorData[i*7+5] = posDDot;
+		   sensorData[i*7+6] = timeMills;
                 }
             }
 
