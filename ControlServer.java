@@ -93,7 +93,7 @@ class PoleServer_handler implements Runnable {
         }
         t.start();
     }
-    double angle, angleDot, angleDDot, pos, posDot, posDDot,  action = 0, i = 0;
+    double angle, angleDot, angleDDot, pos, posDot, posDDot, timestampRx, action = 0, i = 0;
 
     /**
      * This method receives the pole positions and calculates the updated value
@@ -120,7 +120,7 @@ class PoleServer_handler implements Runnable {
                 }
                 
                 double[] data= (double[])(obj);
-                assert(data.length == NUM_POLES * 6);
+                assert(data.length == NUM_POLES * 7);
                 double[] actions = new double[NUM_POLES];
  
                 // Get sensor data of each pole and calculate the action to be
@@ -130,13 +130,14 @@ class PoleServer_handler implements Runnable {
                 // the control of one pendulum needs sensing data from other
                 // pendulums.
                 for (int i = 0; i < NUM_POLES; i++) {
-                  angle = data[i*6+0];
-                  angleDot = data[i*6+1];
-                  angleDDot = data[i*6+2];
-                  pos = data[i*6+3];
-                  posDot = data[i*6+4];
-                  posDDot = data[i*6+5];
-                  
+                  angle = data[i*7+0];
+                  angleDot = data[i*7+1];
+                  angleDDot = data[i*7+2];
+                  pos = data[i*7+3];
+                  posDot = data[i*7+4];
+                  posDDot = data[i*7+5];
+                  timestampRx = data[i*7+6];
+
                   System.out.println("server < pole["+i+"]: "+angle+"  "
                       +angleDot+"   "+angleDDot+"   "+pos+"  "+posDot+ "  "+posDDot);
                   actions[i] = calculate_action(angle, angleDot, angleDDot, pos, posDot, posDDot);
